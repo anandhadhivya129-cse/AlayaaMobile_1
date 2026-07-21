@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { LogOut, Camera } from 'lucide-react-native';
 import { Screen, Field, Button, ErrorText } from './ui';
 import { useAuth } from '../context/AuthContext';
+import { pickImageFromCameraOrLibrary } from '../utils/imagePicker';
 import colors from '../theme/colors';
 
 export default function ProfileForm({ navigation, homeRoute = 'Home' }) {
@@ -19,13 +19,11 @@ export default function ProfileForm({ navigation, homeRoute = 'Home' }) {
   const [saved, setSaved] = useState(false);
 
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is required to change your picture.');
+    const result = await pickImageFromCameraOrLibrary({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+    if (result.canceled) {
+      if (result.error) setError(result.error);
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
-    if (result.canceled) return;
     setUploading(true);
     setError('');
     try {

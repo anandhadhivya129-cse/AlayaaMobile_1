@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { ImagePlus } from 'lucide-react-native';
+import { ImagePlus, X } from 'lucide-react-native';
 import { Screen, Field, Button, ErrorText } from '../../components/ui';
 import { createProperty, uploadPropertyImages } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { pickImageFromCameraOrLibrary } from '../../utils/imagePicker';
 import colors from '../../theme/colors';
 
 const PROPERTY_TYPES = ['Apartment', 'Villa', 'Plot', 'Commercial'];
@@ -25,19 +25,29 @@ export default function BrokerPostPropertyScreen({ navigation }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  const MAX_IMAGES = 8;
+
   const pickImages = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is required to add images.');
+    const remaining = MAX_IMAGES - images.length;
+    if (remaining <= 0) {
+      setError(`You can add up to ${MAX_IMAGES} photos.`);
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await pickImageFromCameraOrLibrary({
       allowsMultipleSelection: true,
+      selectionLimit: remaining,
       quality: 0.7,
-      selectionLimit: 8,
     });
-    if (!result.canceled) setImages((prev) => [...prev, ...result.assets]);
+    if (result.canceled) {
+      if (result.error) setError(result.error);
+      return;
+    }
+    setError('');
+    setImages((prev) => [...prev, ...result.assets].slice(0, MAX_IMAGES));
+  };
+
+  const removeImage = (idx) => {
+    setImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const reset = () => {
@@ -119,17 +129,25 @@ export default function BrokerPostPropertyScreen({ navigation }) {
           ))}
         </View>
 
-        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.espresso900, marginBottom: 8 }}>Photos</Text>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.espresso900, marginBottom: 4 }}>Photos</Text>
+        <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 8 }}>{images.length}/{MAX_IMAGES} added · tap a photo to remove it</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           {images.map((img, idx) => (
-            <Image key={idx} source={{ uri: img.uri }} style={{ width: 72, height: 72, borderRadius: 10 }} />
+            <TouchableOpacity key={idx} onPress={() => removeImage(idx)} style={{ width: 72, height: 72 }}>
+              <Image source={{ uri: img.uri }} style={{ width: 72, height: 72, borderRadius: 10 }} />
+              <View style={{ position: 'absolute', top: -6, right: -6, backgroundColor: colors.espresso900, borderRadius: 10, padding: 3 }}>
+                <X size={12} color={colors.white} />
+              </View>
+            </TouchableOpacity>
           ))}
-          <TouchableOpacity
-            onPress={pickImages}
-            style={{ width: 72, height: 72, borderRadius: 10, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.espresso50 }}
-          >
-            <ImagePlus size={22} color={colors.espresso600} />
-          </TouchableOpacity>
+          {images.length < MAX_IMAGES ? (
+            <TouchableOpacity
+              onPress={pickImages}
+              style={{ width: 72, height: 72, borderRadius: 10, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.espresso50 }}
+            >
+              <ImagePlus size={22} color={colors.espresso600} />
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         <Button title="Post Property" onPress={submit} loading={loading} />

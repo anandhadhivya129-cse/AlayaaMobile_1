@@ -7,12 +7,28 @@
     "scheme": "alayaa",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true, "bundleIdentifier": "com.elaiyanila.alayaa" },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.elaiyanila.alayaa",
+      "infoPlist": {
+        "NSCameraUsageDescription": "ALAYAA uses your camera so you can take photos of properties and update your profile picture.",
+        "NSPhotoLibraryUsageDescription": "ALAYAA needs access to your photo library so you can choose property photos and a profile picture.",
+        "NSPhotoLibraryAddUsageDescription": "ALAYAA saves photos you take to your photo library."
+      }
+    },
     "android": {
       "package": "com.elaiyanila.alayaa",
       "adaptiveIcon": { "backgroundColor": "#0F766E" },
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"]
     },
-    "plugins": ["expo-image-picker"]
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ALAYAA needs access to your photo library so you can choose property photos and a profile picture.",
+          "cameraPermission": "ALAYAA uses your camera so you can take photos of properties and update your profile picture."
+        }
+      ]
+    ]
   }
 }
