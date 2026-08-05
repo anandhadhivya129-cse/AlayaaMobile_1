@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
-import { Search, User, LogOut } from 'lucide-react-native';
+import { Search, User, LogOut, PlusCircle } from 'lucide-react-native';
 import { Screen, Field, EmptyState } from '../components/ui';
 import PropertyCard from '../components/PropertyCard';
 import Logo from '../components/Logo';
 import Footer from '../components/Footer';
+import PostPropertyRoleModal from '../components/PostPropertyRoleModal';
 import { fetchProperties, toggleFavorite as apiToggleFavorite } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
@@ -13,6 +14,7 @@ const LISTING_TYPES = ['Buy', 'Rent', 'PG', 'Commercial'];
 
 export default function HomeScreen({ navigation }) {
   const { user, logout } = useAuth();
+  const [showPostRoleModal, setShowPostRoleModal] = useState(false);
   const [query, setQuery] = useState('');
   const [listingType, setListingType] = useState('Buy');
   const [properties, setProperties] = useState([]);
@@ -42,24 +44,38 @@ export default function HomeScreen({ navigation }) {
     else if (role === 'admin') navigation.navigate('AdminDashboard');
   };
 
+  const handleSelectPostRole = (role) => {
+    setShowPostRoleModal(false);
+    // The role picker itself needs no login — it just captures intent.
+    // The actual form (PostPropertyShared) still checks for a logged-in
+    // user and prompts to log in there if needed.
+    navigation.navigate('PostPropertyShared', { intendedRole: role });
+  };
+
   return (
     <Screen>
       <View style={styles.header}>
         <Logo size={32} />
-        {user ? (
-          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-            <TouchableOpacity onPress={goToDashboard}>
-              <User size={22} color={colors.espresso900} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={logout}>
-              <LogOut size={20} color={colors.espresso900} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('CustomerLogin')}>
-            <Text style={styles.loginBtnText}>Login</Text>
+        <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => setShowPostRoleModal(true)} style={styles.postBtn}>
+            <PlusCircle size={16} color={colors.white} />
+            <Text style={styles.postBtnText}>Post</Text>
           </TouchableOpacity>
-        )}
+          {user ? (
+            <>
+              <TouchableOpacity onPress={goToDashboard}>
+                <User size={22} color={colors.espresso900} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={logout}>
+                <LogOut size={20} color={colors.espresso900} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('CustomerLogin')}>
+              <Text style={styles.loginBtnText}>Login</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={{ paddingHorizontal: 16 }}>
@@ -119,6 +135,12 @@ export default function HomeScreen({ navigation }) {
           )}
         />
       )}
+
+      <PostPropertyRoleModal
+        visible={showPostRoleModal}
+        onClose={() => setShowPostRoleModal(false)}
+        onSelectRole={handleSelectPostRole}
+      />
     </Screen>
   );
 }
@@ -132,6 +154,11 @@ const styles = StyleSheet.create({
   tagline: { fontSize: 12, color: colors.textMuted },
   loginBtn: { backgroundColor: colors.espresso700, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   loginBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
+  postBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.espresso700,
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 18,
+  },
+  postBtnText: { color: colors.white, fontWeight: '700', fontSize: 12 },
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.espresso50,
     borderRadius: 12, paddingHorizontal: 12,

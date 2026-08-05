@@ -11,6 +11,37 @@ const PROPERTY_TYPES = ['Apartment', 'Villa', 'Plot', 'Commercial'];
 
 export default function BrokerPostPropertyScreen({ navigation }) {
   const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <Screen>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: '800', color: colors.espresso900, marginBottom: 8, textAlign: 'center' }}>
+            Login to post a property
+          </Text>
+          <Text style={{ fontSize: 14, color: colors.textMuted, textAlign: 'center', marginBottom: 24 }}>
+            You'll need an account so buyers can reach you about your listing.
+          </Text>
+          <Button
+            title="Login as Customer"
+            onPress={() => navigation.navigate('CustomerLogin')}
+            style={{ width: '100%', marginBottom: 12 }}
+          />
+          <Button
+            title="Login as Broker"
+            variant="outline"
+            onPress={() => navigation.navigate('BrokerLogin')}
+            style={{ width: '100%' }}
+          />
+        </View>
+      </Screen>
+    );
+  }
+
+  return <PostPropertyForm navigation={navigation} userId={user.id} />;
+}
+
+function PostPropertyForm({ navigation, userId }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -66,10 +97,10 @@ export default function BrokerPostPropertyScreen({ navigation }) {
     try {
       let imageUrls = [];
       if (images.length) {
-        imageUrls = await uploadPropertyImages(images, user.id);
+        imageUrls = await uploadPropertyImages(images, userId);
       }
       await createProperty({
-        broker_id: user.id,
+        broker_id: userId,
         title,
         description,
         price,
@@ -84,7 +115,17 @@ export default function BrokerPostPropertyScreen({ navigation }) {
       });
       setSuccess(true);
       reset();
-      navigation.navigate('Listings');
+      // Only jump to the broker's "Listings" tab if it actually exists in
+      // this navigator (i.e. we're running inside BrokerTabs). In the
+      // customer tab bar or the Home page stack, just stay put and show
+      // the success message above.
+      const state = navigation.getState?.();
+      const hasListingsRoute = state?.routeNames?.includes('Listings');
+      if (hasListingsRoute) {
+        navigation.navigate('Listings');
+      } else if (navigation.canGoBack()) {
+        navigation.goBack();
+      }
     } catch (err) {
       setError(err.message || 'Could not post property.');
     } finally {

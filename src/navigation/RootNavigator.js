@@ -5,6 +5,7 @@ import * as Linking from 'expo-linking';
 
 import HomeScreen from '../screens/HomeScreen';
 import PropertyDetailScreen from '../screens/PropertyDetailScreen';
+import BrokerPostPropertyScreen from '../screens/broker/BrokerPostPropertyScreen';
 import CustomerLoginScreen from '../screens/CustomerLoginScreen';
 import CustomerRegisterScreen from '../screens/CustomerRegisterScreen';
 import BrokerLoginScreen from '../screens/BrokerLoginScreen';
@@ -37,6 +38,7 @@ export default function RootNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} options={{ headerShown: true, title: 'Property' }} />
+        <Stack.Screen name="PostPropertyShared" component={BrokerPostPropertyScreen} options={{ headerShown: true, title: 'Post a Property' }} />
 
         <Stack.Screen name="CustomerLogin" component={CustomerLoginScreen} />
         <Stack.Screen name="CustomerRegister" component={CustomerRegisterScreen} />
