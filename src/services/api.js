@@ -210,7 +210,7 @@ export async function login({ email, password, role }) {
 
 export async function register(payload) {
   const { fullName, email, phone, city, bio, password, role = 'customer' } = payload;
-
+console.log('🔗 REDIRECT URL BEING SENT:', authRedirectPath('/login'));
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
