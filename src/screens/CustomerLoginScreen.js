@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Screen, Field, Button, ErrorText } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
 
 export default function CustomerLoginScreen({ navigation }) {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Covers the email-confirmation deep link case for ALL roles. RootNavigator's
+  // linking config maps every "alayaa://login" link to this screen — regardless
+  // of whether the person who signed up was a customer, broker, or admin — so
+  // this is the one place that needs to know where each role's dashboard lives.
+  // AuthContext sets the session in the background; once `user` becomes
+  // available here, redirect immediately instead of leaving them stuck looking
+  // at an empty customer login form.
+  useEffect(() => {
+    const role = user?.profile?.role;
+    if (role === 'customer') navigation.replace('CustomerDashboard');
+    else if (role === 'broker') navigation.replace('BrokerDashboard');
+    else if (role === 'admin') navigation.replace('AdminDashboard');
+  }, [user]);
 
   const submit = async () => {
     setError('');

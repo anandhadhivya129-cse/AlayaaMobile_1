@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import * as Linking from 'expo-linking';
 import {
   forgotPassword as apiForgotPassword,
   getSessionUser,
@@ -30,6 +31,26 @@ function applyUserProfile(authUser, profile) {
       brokerApproval: null,
     },
   };
+}
+
+// Pulls access_token / refresh_token out of a Supabase deep-link redirect,
+// e.g. alayaa://login#access_token=...&refresh_token=...
+// Handles both a leading "#" fragment and a leading "?" query, since
+// different Supabase flows (confirm signup vs magic link) can format it either way.
+function parseTokensFromUrl(url) {
+  if (!url) return null;
+  const fragment = url.split('#')[1];
+  const query = url.split('?')[1];
+  const paramsString = fragment || query;
+  if (!paramsString) return null;
+
+  const params = new URLSearchParams(paramsString);
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+  if (access_token && refresh_token) {
+    return { access_token, refresh_token };
+  }
+  return null;
 }
 
 export function AuthProvider({ children }) {
@@ -100,6 +121,35 @@ export function AuthProvider({ children }) {
       active = false;
       subscription?.unsubscribe();
     };
+  }, []);
+
+  // Handles the alayaa://login (or alayaa://auth/callback) link that Supabase
+  // sends in confirmation / password-reset emails. When tapped, it hands the
+  // access_token + refresh_token to supabase.auth.setSession(), which then
+  // fires onAuthStateChange above and hydrates the user automatically.
+  useEffect(() => {
+    const handleDeepLink = async (event) => {
+      const url = typeof event === 'string' ? event : event?.url;
+      const tokens = parseTokensFromUrl(url);
+      if (!tokens) return;
+
+      try {
+        const { error } = await supabase.auth.setSession(tokens);
+        if (error) throw error;
+      } catch (error) {
+        console.error('Failed to set session from deep link', error);
+      }
+    };
+
+    // App opened cold, directly from the email link
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink(url);
+    });
+
+    // App already running in background, link brings it to foreground
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    return () => subscription.remove();
   }, []);
 
   const login = async (payload) => {
