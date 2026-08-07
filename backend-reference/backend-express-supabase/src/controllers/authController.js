@@ -11,7 +11,7 @@ export const register = asyncHandler(async (req, res) => {
     password,
     options: {
       data: { full_name: fullName, phone, role },
-      emailRedirectTo: "alayaa://auth/callback"
+      emailRedirectTo: "alayaa://login"
     }
   });
   console.log('SIGNUP DATA:', data);

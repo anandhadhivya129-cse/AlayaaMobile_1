@@ -177,10 +177,9 @@ async function attachProfiles(rows, profileKey) {
 
 // In RN there's no window.location.origin — we use the app's own deep-link scheme
 // (see app.json "scheme": "alayaa") so Supabase can redirect back into the app.
-function authRedirectPath(nextPath) {
-  return Linking.createURL(nextPath || '/login');
+function authRedirectPath(path = '') {
+  return Linking.createURL(path);
 }
-
 export async function login({ email, password, role }) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
