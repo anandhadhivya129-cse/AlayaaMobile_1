@@ -4,6 +4,7 @@ import { LogOut, Camera } from 'lucide-react-native';
 import { Screen, Field, Button, ErrorText } from './ui';
 import { useAuth } from '../context/AuthContext';
 import { pickImageFromCameraOrLibrary } from '../utils/imagePicker';
+import { getFriendlyErrorMessage } from '../services/api';
 import colors from '../theme/colors';
 
 export default function ProfileForm({ navigation, homeRoute = 'Home' }) {
@@ -29,7 +30,7 @@ export default function ProfileForm({ navigation, homeRoute = 'Home' }) {
     try {
       await uploadProfilePicture(result.assets[0]);
     } catch (err) {
-      setError(err.message || 'Could not upload photo.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setUploading(false);
     }
@@ -43,7 +44,7 @@ export default function ProfileForm({ navigation, homeRoute = 'Home' }) {
       await updateProfile({ full_name: fullName, phone, city, bio });
       setSaved(true);
     } catch (err) {
-      setError(err.message || 'Could not save changes.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

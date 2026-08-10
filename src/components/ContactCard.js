@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
 import { Card, Field, Button, ErrorText } from './ui';
+import { getFriendlyErrorMessage } from '../services/api';
 import colors from '../theme/colors';
 
 export default function ContactCard({ brokerName, onSubmit }) {
@@ -21,7 +22,7 @@ export default function ContactCard({ brokerName, onSubmit }) {
       setSent(true);
       setMessage('');
     } catch (err) {
-      setError(err.message || 'Could not send enquiry.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

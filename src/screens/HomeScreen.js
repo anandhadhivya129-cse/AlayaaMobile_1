@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Search, User, LogOut, PlusCircle } from 'lucide-react-native';
 import { Screen, Field, EmptyState } from '../components/ui';
@@ -11,27 +11,52 @@ import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
 
 const LISTING_TYPES = ['Buy', 'Rent', 'PG', 'Commercial'];
+const SEARCH_DEBOUNCE_MS = 400;
 
 export default function HomeScreen({ navigation }) {
   const { user, logout } = useAuth();
   const [showPostRoleModal, setShowPostRoleModal] = useState(false);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [listingType, setListingType] = useState('Buy');
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
+  // Tracks which fetch is the most recent one, so a slow response for an
+  // earlier keystroke can't land after (and overwrite) a faster response
+  // for a later keystroke.
+  const requestIdRef = useRef(0);
+
+  // Debounce: wait until the person pauses typing before actually searching,
+  // instead of firing a request on every keystroke.
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [query]);
+
+  const load = useCallback(async ({ isRefresh = false } = {}) => {
+    const requestId = ++requestIdRef.current;
+    if (isRefresh) setRefreshing(true);
+    else setSearching(true);
+
     try {
-      const data = await fetchProperties({ query, status: 'active' });
+      const data = await fetchProperties({ query: debouncedQuery, status: 'active' });
+      // Ignore this result if a newer search has since been kicked off.
+      if (requestId !== requestIdRef.current) return;
       setProperties(data);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error('Failed to load properties', err);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setSearching(false);
+        setRefreshing(false);
+      }
     }
-  }, [query]);
+  }, [debouncedQuery]);
 
   useEffect(() => {
     load();
@@ -86,9 +111,10 @@ export default function HomeScreen({ navigation }) {
             placeholder="Search by locality, city, or project"
             value={query}
             onChangeText={setQuery}
-            onSubmitEditing={load}
+            onSubmitEditing={() => { setDebouncedQuery(query); }}
             returnKeyType="search"
           />
+          {searching ? <ActivityIndicator size="small" color={colors.espresso700} /> : null}
         </View>
 
         <View style={styles.typeRow}>
@@ -113,7 +139,7 @@ export default function HomeScreen({ navigation }) {
           data={properties}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16, paddingTop: 8 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load({ isRefresh: true })} />}
           ListEmptyComponent={<EmptyState title="No properties found" subtitle="Try a different search or check back later." />}
           ListFooterComponent={<Footer />}
           renderItem={({ item }) => (

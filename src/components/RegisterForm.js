@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Screen, Field, Button, ErrorText } from './ui';
 import { useAuth } from '../context/AuthContext';
+import { getFriendlyErrorMessage } from '../services/api';
 import colors from '../theme/colors';
 
 export default function RegisterForm({ role, title, subtitle, loginRoute, navigation }) {
@@ -26,7 +27,7 @@ export default function RegisterForm({ role, title, subtitle, loginRoute, naviga
       await register({ fullName, email: email.trim(), phone, city, password, role });
       setSuccess(true);
     } catch (err) {
-      setError(err.message || 'Registration failed.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

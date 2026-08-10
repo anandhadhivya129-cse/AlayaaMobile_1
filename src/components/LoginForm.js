@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Screen, Field, Button, ErrorText } from './ui';
 import { useAuth } from '../context/AuthContext';
+import { getFriendlyErrorMessage } from '../services/api';
 import colors from '../theme/colors';
 
 export default function LoginForm({ role, title, subtitle, dashboardRoute, registerRoute, navigation }) {
@@ -18,7 +19,7 @@ export default function LoginForm({ role, title, subtitle, dashboardRoute, regis
       await login({ email: email.trim(), password, role });
       navigation.replace(dashboardRoute);
     } catch (err) {
-      setError(err.message || 'Login failed.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

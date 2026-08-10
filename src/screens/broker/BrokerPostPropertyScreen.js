@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { ImagePlus, X } from 'lucide-react-native';
 import { Screen, Field, Button, ErrorText } from '../../components/ui';
-import { createProperty, uploadPropertyImages } from '../../services/api';
+import { createProperty, uploadPropertyImages, getFriendlyErrorMessage } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { pickImageFromCameraOrLibrary } from '../../utils/imagePicker';
 import colors from '../../theme/colors';
 
-const PROPERTY_TYPES = ['Apartment', 'Villa', 'Plot', 'Commercial'];
+const PROPERTY_TYPES = ['Apartment', 'Villa', 'House', 'Plot', 'Commercial'];
 
 export default function BrokerPostPropertyScreen({ navigation }) {
   const { user } = useAuth();
@@ -36,6 +36,44 @@ export default function BrokerPostPropertyScreen({ navigation }) {
         </View>
       </Screen>
     );
+  }
+
+  // Only brokers go through admin approval — customers can post immediately.
+  // A broker who's still 'pending' (or was 'rejected') can't actually save a
+  // listing, so tell them that up front instead of letting them fill out the
+  // whole form and hit a wall on submit.
+  if (user.profile?.role === 'broker') {
+    const approvalStatus = user.profile?.brokerApproval?.status;
+
+    if (approvalStatus === 'pending') {
+      return (
+        <Screen>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.espresso900, marginBottom: 8, textAlign: 'center' }}>
+              Your account is awaiting approval
+            </Text>
+            <Text style={{ fontSize: 14, color: colors.textMuted, textAlign: 'center' }}>
+              An admin needs to approve your broker account before you can post properties. This usually doesn't take long — check back soon.
+            </Text>
+          </View>
+        </Screen>
+      );
+    }
+
+    if (approvalStatus === 'rejected') {
+      return (
+        <Screen>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.espresso900, marginBottom: 8, textAlign: 'center' }}>
+              Broker application not approved
+            </Text>
+            <Text style={{ fontSize: 14, color: colors.textMuted, textAlign: 'center' }}>
+              Your broker application wasn't approved, so you can't post properties. Please contact support if you think this is a mistake.
+            </Text>
+          </View>
+        </Screen>
+      );
+    }
   }
 
   return <PostPropertyForm navigation={navigation} userId={user.id} />;
@@ -127,7 +165,7 @@ function PostPropertyForm({ navigation, userId }) {
         navigation.goBack();
       }
     } catch (err) {
-      setError(err.message || 'Could not post property.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

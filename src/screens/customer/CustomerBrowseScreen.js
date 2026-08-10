@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { Screen, Field, EmptyState } from '../../components/ui';
 import PropertyCard from '../../components/PropertyCard';
@@ -7,29 +7,49 @@ import { fetchProperties, toggleFavorite, fetchFavorites } from '../../services/
 import { useAuth } from '../../context/AuthContext';
 import colors from '../../theme/colors';
 
+const SEARCH_DEBOUNCE_MS = 400;
+
 export default function CustomerBrowseScreen({ navigation }) {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [properties, setProperties] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [query]);
+
+  const load = useCallback(async ({ isRefresh = false } = {}) => {
+    const requestId = ++requestIdRef.current;
+    if (isRefresh) setRefreshing(true);
+    else setSearching(true);
+
     try {
       const [props, favs] = await Promise.all([
-        fetchProperties({ query, status: 'active' }),
+        fetchProperties({ query: debouncedQuery, status: 'active' }),
         user?.id ? fetchFavorites(user.id) : Promise.resolve([]),
       ]);
+      if (requestId !== requestIdRef.current) return;
       setProperties(props);
       setFavoriteIds(new Set(favs.map((f) => f.property_id)));
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error(err);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setSearching(false);
+        setRefreshing(false);
+      }
     }
-  }, [query, user?.id]);
+  }, [debouncedQuery, user?.id]);
 
   useEffect(() => {
     load();
@@ -57,7 +77,17 @@ export default function CustomerBrowseScreen({ navigation }) {
         <Text style={{ fontSize: 20, fontWeight: '800', color: colors.espresso900, marginBottom: 12 }}>
           Hi {user?.profile?.full_name?.split(' ')[0] || 'there'} 👋
         </Text>
-        <Field placeholder="Search properties" value={query} onChangeText={setQuery} onSubmitEditing={load} returnKeyType="search" />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Field
+            style={{ flex: 1 }}
+            placeholder="Search properties"
+            value={query}
+            onChangeText={setQuery}
+            onSubmitEditing={() => setDebouncedQuery(query)}
+            returnKeyType="search"
+          />
+          {searching ? <ActivityIndicator size="small" color={colors.espresso700} /> : null}
+        </View>
       </View>
 
       {loading ? (
@@ -69,7 +99,7 @@ export default function CustomerBrowseScreen({ navigation }) {
           data={properties}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16, paddingTop: 0 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load({ isRefresh: true })} />}
           ListEmptyComponent={<EmptyState title="No properties found" />}
           ListFooterComponent={<Footer />}
           renderItem={({ item }) => (

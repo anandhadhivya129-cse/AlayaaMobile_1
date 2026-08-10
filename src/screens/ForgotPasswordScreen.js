@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Screen, Field, Button, ErrorText } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
+import { getFriendlyErrorMessage } from '../services/api';
 import colors from '../theme/colors';
 
 export default function ForgotPasswordScreen({ navigation }) {
@@ -22,7 +23,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       await forgotPassword(email.trim());
       setSent(true);
     } catch (err) {
-      setError(err.message || 'Could not send reset email.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

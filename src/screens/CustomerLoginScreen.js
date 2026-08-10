@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Screen, Field, Button, ErrorText } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
+import { getFriendlyErrorMessage } from '../services/api';
 import colors from '../theme/colors';
 
 export default function CustomerLoginScreen({ navigation }) {
@@ -32,7 +33,7 @@ export default function CustomerLoginScreen({ navigation }) {
       await login({ email: email.trim(), password, role: 'customer' });
       navigation.replace('CustomerDashboard');
     } catch (err) {
-      setError(err.message || 'Login failed.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

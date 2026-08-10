@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Text } from 'react-native';
 import { Screen, Field, Button, ErrorText } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
+import { getFriendlyErrorMessage } from '../services/api';
 import colors from '../theme/colors';
 
 export default function ResetPasswordScreen({ navigation }) {
@@ -26,7 +27,7 @@ export default function ResetPasswordScreen({ navigation }) {
       await resetPassword(password);
       navigation.replace('CustomerLogin');
     } catch (err) {
-      setError(err.message || 'Could not reset password.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

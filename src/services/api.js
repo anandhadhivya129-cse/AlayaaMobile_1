@@ -104,8 +104,20 @@ async function getCurrentAuthUser() {
   return data.user || null;
 }
 
-async function fetchBrokerApproval(_brokerId) {
-  return { status: 'approved' };
+// Real lookup against broker_approvals — this used to be hardcoded to always
+// return 'approved', which meant brokers were told they were cleared to post
+// even when they were still 'pending' in the database. If no row exists yet
+// (shouldn't normally happen — the signup trigger creates one for every
+// broker), we fall back to 'pending' rather than silently approving.
+async function fetchBrokerApproval(brokerId) {
+  if (!brokerId) return null;
+  const { data, error } = await supabase
+    .from('broker_approvals')
+    .select('*')
+    .eq('broker_id', brokerId)
+    .maybeSingle();
+  if (error) throw error;
+  return data || { status: 'pending' };
 }
 
 async function ensureProfileForAuthUser(authUser) {
@@ -180,6 +192,32 @@ async function attachProfiles(rows, profileKey) {
 function authRedirectPath(path = '') {
   return Linking.createURL(path);
 }
+
+// Turns raw Supabase/Postgres error messages (RLS violations, network
+// failures, etc.) into something a user can actually understand, instead of
+// e.g. "new row violates row-level security policy for table properties".
+export function getFriendlyErrorMessage(error) {
+  const raw = error?.message || String(error || '');
+  const lower = raw.toLowerCase();
+
+  if (lower.includes('invalid login credentials') || lower.includes('invalid email or password')) {
+    return 'The email or password you entered is incorrect.';
+  }
+  if (lower.includes('row-level security') || lower.includes('permission denied')) {
+    return "You don't have permission to do that yet. If you're a broker, your account may still be waiting on admin approval.";
+  }
+  if (lower.includes('network request failed') || lower.includes('failed to fetch')) {
+    return 'Could not reach the server. Please check your internet connection and try again.';
+  }
+  if (lower.includes('duplicate key') || lower.includes('already registered') || lower.includes('already exists')) {
+    return 'This already exists.';
+  }
+  if (lower.includes('jwt') || lower.includes('session') || lower.includes('not authenticated')) {
+    return 'Your session has expired. Please log in again.';
+  }
+  return raw || 'Something went wrong. Please try again.';
+}
+
 export async function login({ email, password, role }) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
@@ -209,7 +247,6 @@ export async function login({ email, password, role }) {
 
 export async function register(payload) {
   const { fullName, email, phone, city, bio, password, role = 'customer' } = payload;
-console.log('🔗 REDIRECT URL BEING SENT:', authRedirectPath('/login'));
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -352,7 +389,7 @@ export async function fetchBrokerProperties(brokerId) {
 export async function createProperty(payload) {
   const { data: authUser } = await supabase.auth.getUser();
   const brokerId = payload.broker_id || authUser.user?.id;
-  if (!brokerId) throw new Error('A logged in broker is required.');
+  if (!brokerId) throw new Error('A logged in user is required.');
 
   const row = {
     broker_id: brokerId,
