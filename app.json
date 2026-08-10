@@ -15,7 +15,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "ALAYAA uses your camera so you can take photos of properties and update your profile picture.",
         "NSPhotoLibraryUsageDescription": "ALAYAA needs access to your photo library so you can choose property photos and a profile picture.",
-        "NSPhotoLibraryAddUsageDescription": "ALAYAA saves photos you take to your photo library."
+        "NSPhotoLibraryAddUsageDescription": "ALAYAA saves photos you take to your photo library.",
+        "NSLocationWhenInUseUsageDescription": "ALAYAA uses your location so you can pin a property's exact spot when posting a listing."
       }
     },
     "android": {
@@ -27,8 +28,15 @@
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
-      ]
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_ANDROID_GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "plugins": [
       [
@@ -36,6 +44,12 @@
         {
           "photosPermission": "ALAYAA needs access to your photo library so you can choose property photos and a profile picture.",
           "cameraPermission": "ALAYAA uses your camera so you can take photos of properties and update your profile picture."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ALAYAA uses your location so you can pin a property's exact spot when posting a listing."
         }
       ]
     ],

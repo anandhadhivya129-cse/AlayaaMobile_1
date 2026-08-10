@@ -404,6 +404,8 @@ export async function createProperty(payload) {
     property_type: payload.property_type,
     status: payload.status || 'active',
     images: asArray(payload.images),
+    latitude: payload.latitude != null ? Number(payload.latitude) : null,
+    longitude: payload.longitude != null ? Number(payload.longitude) : null,
   };
 
   const { data, error } = await supabase.from('properties').insert(row).select('*').single();
@@ -425,6 +427,8 @@ export async function updateProperty(id, payload) {
     property_type: payload.property_type,
     status: payload.status || 'active',
     images: asArray(payload.images),
+    latitude: payload.latitude != null ? Number(payload.latitude) : null,
+    longitude: payload.longitude != null ? Number(payload.longitude) : null,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase.from('properties').update(row).eq('id', id).select('*').single();

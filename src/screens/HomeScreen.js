@@ -187,9 +187,9 @@ const styles = StyleSheet.create({
   postBtnText: { color: colors.white, fontWeight: '700', fontSize: 12 },
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.espresso50,
-    borderRadius: 12, paddingHorizontal: 12,
+    borderRadius: 12, paddingHorizontal: 12, height: 48, overflow: 'hidden',
   },
-  searchInput: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', marginBottom: 0, paddingLeft: 0 },
+  searchInput: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', marginBottom: 0, paddingLeft: 0, height: 48, paddingVertical: 0, textAlignVertical: 'center', fontSize: 14 },
   typeRow: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 4 },
   typeChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 18, borderWidth: 1, borderColor: colors.border },
   typeChipActive: { backgroundColor: colors.espresso700, borderColor: colors.espresso700 },

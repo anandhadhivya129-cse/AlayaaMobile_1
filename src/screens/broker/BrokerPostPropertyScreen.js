@@ -5,6 +5,7 @@ import { Screen, Field, Button, ErrorText } from '../../components/ui';
 import { createProperty, uploadPropertyImages, getFriendlyErrorMessage } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { pickImageFromCameraOrLibrary } from '../../utils/imagePicker';
+import LocationPicker from '../../components/LocationPicker';
 import colors from '../../theme/colors';
 
 const PROPERTY_TYPES = ['Apartment', 'Villa', 'House', 'Plot', 'Commercial'];
@@ -89,6 +90,8 @@ function PostPropertyForm({ navigation, userId }) {
   const [bathrooms, setBathrooms] = useState('');
   const [area, setArea] = useState('');
   const [propertyType, setPropertyType] = useState(PROPERTY_TYPES[0]);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -122,6 +125,7 @@ function PostPropertyForm({ navigation, userId }) {
   const reset = () => {
     setTitle(''); setDescription(''); setPrice(''); setCity(''); setLocation('');
     setBedrooms(''); setBathrooms(''); setArea(''); setImages([]);
+    setLatitude(null); setLongitude(null);
   };
 
   const submit = async () => {
@@ -148,6 +152,8 @@ function PostPropertyForm({ navigation, userId }) {
         bathrooms,
         area,
         property_type: propertyType,
+        latitude,
+        longitude,
         images: imageUrls,
         status: 'active',
       });
@@ -207,6 +213,12 @@ function PostPropertyForm({ navigation, userId }) {
             </TouchableOpacity>
           ))}
         </View>
+
+        <LocationPicker
+          latitude={latitude}
+          longitude={longitude}
+          onChange={(coords) => { setLatitude(coords.latitude); setLongitude(coords.longitude); }}
+        />
 
         <Text style={{ fontSize: 13, fontWeight: '600', color: colors.espresso900, marginBottom: 4 }}>Photos</Text>
         <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 8 }}>{images.length}/{MAX_IMAGES} added · tap a photo to remove it</Text>
