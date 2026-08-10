@@ -1,18 +1,13 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { LocateFixed, MapPin } from 'lucide-react-native';
+import LeafletMap from './LeafletMap';
 import colors from '../theme/colors';
 
 // Default map center when the broker hasn't picked a spot yet (Chennai —
 // change this if most of your listings are elsewhere).
-const DEFAULT_REGION = {
-  latitude: 13.0827,
-  longitude: 80.2707,
-  latitudeDelta: 0.15,
-  longitudeDelta: 0.15,
-};
+const DEFAULT_CENTER = { latitude: 13.0827, longitude: 80.2707 };
 
 /**
  * Map picker for a property's location. Tap anywhere on the map, or drag
@@ -27,12 +22,10 @@ const DEFAULT_REGION = {
 export default function LocationPicker({ latitude, longitude, onChange }) {
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState('');
+  const mapRef = useRef(null);
 
   const hasPin = latitude != null && longitude != null;
-
-  const region = hasPin
-    ? { latitude, longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 }
-    : DEFAULT_REGION;
+  const center = hasPin ? { latitude, longitude } : DEFAULT_CENTER;
 
   const useCurrentLocation = async () => {
     setError('');
@@ -46,10 +39,12 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
       const position = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      onChange({
+      const coords = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-      });
+      };
+      onChange(coords);
+      mapRef.current?.setMarker(coords.latitude, coords.longitude);
     } catch (err) {
       setError('Could not get your current location. Try tapping the map instead.');
     } finally {
@@ -92,20 +87,15 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
           borderColor: colors.border,
         }}
       >
-        <MapView
-          style={{ flex: 1 }}
-          initialRegion={DEFAULT_REGION}
-          region={hasPin ? region : undefined}
-          onPress={(e) => onChange(e.nativeEvent.coordinate)}
-        >
-          {hasPin ? (
-            <Marker
-              coordinate={{ latitude, longitude }}
-              draggable
-              onDragEnd={(e) => onChange(e.nativeEvent.coordinate)}
-            />
-          ) : null}
-        </MapView>
+        <LeafletMap
+          ref={mapRef}
+          latitude={center.latitude}
+          longitude={center.longitude}
+          zoom={hasPin ? 14 : 11}
+          hasMarker={hasPin}
+          interactive
+          onLocationChange={onChange}
+        />
       </View>
 
       {hasPin ? (

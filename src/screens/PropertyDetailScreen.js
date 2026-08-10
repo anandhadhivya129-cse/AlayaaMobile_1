@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, ActivityIndicator, StyleSheet, FlatList, Dimensions } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 import { MapPin, BedDouble, Bath, Ruler, BadgeCheck } from 'lucide-react-native';
 import { Screen } from '../components/ui';
+import LeafletMap from '../components/LeafletMap';
 import EMICalculator from '../components/EMICalculator';
 import ContactCard from '../components/ContactCard';
 import { fetchPropertyById, createEnquiry, fetchProfileById } from '../services/api';
@@ -136,21 +136,13 @@ export default function PropertyDetailScreen({ route, navigation }) {
             <View style={{ marginTop: 16 }}>
               <Text style={styles.sectionTitle}>Location</Text>
               <View style={styles.mapWrap}>
-                <MapView
-                  style={{ flex: 1 }}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                  pitchEnabled={false}
-                  rotateEnabled={false}
-                  region={{
-                    latitude: property.latitude,
-                    longitude: property.longitude,
-                    latitudeDelta: 0.02,
-                    longitudeDelta: 0.02,
-                  }}
-                >
-                  <Marker coordinate={{ latitude: property.latitude, longitude: property.longitude }} />
-                </MapView>
+                <LeafletMap
+                  latitude={property.latitude}
+                  longitude={property.longitude}
+                  zoom={15}
+                  hasMarker
+                  interactive={false}
+                />
               </View>
             </View>
           ) : null}
