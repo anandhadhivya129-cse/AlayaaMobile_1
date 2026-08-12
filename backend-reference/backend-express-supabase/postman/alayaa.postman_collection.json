@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "ALAYAA Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "propertyId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/../health" }
+    },
+    {
+      "name": "Customer Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/customer/register",
+        "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Rahul Kumar\",\n  \"email\": \"rahul@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"+919876543210\",\n  \"role\": \"customer\"\n}" }
+      }
+    },
+    {
+      "name": "Broker Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/broker/register",
+        "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Ravi Broker\",\n  \"email\": \"broker@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"+919876543211\",\n  \"role\": \"broker\",\n  \"reraNumber\": \"TN-RERA-12345\"\n}" }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"rahul@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"customer\"\n}" }
+      }
+    },
+    {
+      "name": "List Properties",
+      "request": { "method": "GET", "url": "{{baseUrl}}/properties?city=Chennai&listingType=Buy&sort=newest" }
+    },
+    {
+      "name": "Featured Properties",
+      "request": { "method": "GET", "url": "{{baseUrl}}/properties/featured" }
+    },
+    {
+      "name": "Map Markers",
+      "request": { "method": "GET", "url": "{{baseUrl}}/properties/map?city=Chennai" }
+    },
+    {
+      "name": "Create Property",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/properties",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "title", "value": "Luxury 3BHK Apartment in Chennai", "type": "text" },
+            { "key": "description", "value": "Premium verified home near metro and schools.", "type": "text" },
+            { "key": "propertyType", "value": "Apartment", "type": "text" },
+            { "key": "listingType", "value": "Buy", "type": "text" },
+            { "key": "price", "value": "7800000", "type": "text" },
+            { "key": "area", "value": "1350 sq.ft", "type": "text" },
+            { "key": "bhk", "value": "3", "type": "text" },
+            { "key": "bathrooms", "value": "2", "type": "text" },
+            { "key": "city", "value": "Chennai", "type": "text" },
+            { "key": "district", "value": "Chennai", "type": "text" },
+            { "key": "latitude", "value": "13.0827", "type": "text" },
+            { "key": "longitude", "value": "80.2707", "type": "text" },
+            { "key": "images", "type": "file", "src": "" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Save Property",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/users/wishlist/{{propertyId}}"
+      }
+    },
+    {
+      "name": "Wishlist",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/users/wishlist"
+      }
+    },
+    {
+      "name": "Compare Properties",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/compare",
+        "body": { "mode": "raw", "raw": "{\n  \"propertyIds\": [\"{{propertyId}}\", \"00000000-0000-0000-0000-000000000000\"]\n}" }
+      }
+    },
+    {
+      "name": "Send Inquiry",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/inquiries",
+        "body": { "mode": "raw", "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"type\": \"callback\",\n  \"message\": \"Please call me.\"\n}" }
+      }
+    },
+    {
+      "name": "Book Visit",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/visits",
+        "body": { "mode": "raw", "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"visitType\": \"site_visit\",\n  \"scheduledAt\": \"2026-06-15T10:30:00.000Z\"\n}" }
+      }
+    },
+    {
+      "name": "Customer Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/users/dashboard"
+      }
+    },
+    {
+      "name": "Broker Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/dashboard/broker"
+      }
+    },
+    {
+      "name": "Admin Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/dashboard/admin"
+      }
+    },
+    {
+      "name": "Tamil Nadu Cities",
+      "request": { "method": "GET", "url": "{{baseUrl}}/locations/tamil-nadu/cities" }
+    }
+  ]
+}

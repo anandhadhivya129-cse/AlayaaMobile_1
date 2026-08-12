@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "ALAYAA",
+    "slug": "alayaa-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "alayaa",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.elaiyanila.alayaa",
+      "infoPlist": {
+        "NSCameraUsageDescription": "ALAYAA uses your camera so you can take photos of properties and update your profile picture.",
+        "NSPhotoLibraryUsageDescription": "ALAYAA needs access to your photo library so you can choose property photos and a profile picture.",
+        "NSPhotoLibraryAddUsageDescription": "ALAYAA saves photos you take to your photo library.",
+        "NSLocationWhenInUseUsageDescription": "ALAYAA uses your location so you can pin a property's exact spot when posting a listing."
+      }
+    },
+    "android": {
+      "package": "com.elaiyanila.alayaa",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F766E"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCFIurWWqLdC0rTD8IYFSGBAV0cuMCL5zg"
+        }
+      }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ALAYAA needs access to your photo library so you can choose property photos and a profile picture.",
+          "cameraPermission": "ALAYAA uses your camera so you can take photos of properties and update your profile picture."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ALAYAA uses your location so you can pin a property's exact spot when posting a listing."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a146d58c-f9ad-4549-a9d8-c2694f1c4be8"
+      }
+    }
+  }
+}
