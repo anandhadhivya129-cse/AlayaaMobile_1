@@ -31,7 +31,12 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCFIurWWqLdC0rTD8IYFSGBAV0cuMCL5zg"
+        }
+      }
     },
     "plugins": [
       [
