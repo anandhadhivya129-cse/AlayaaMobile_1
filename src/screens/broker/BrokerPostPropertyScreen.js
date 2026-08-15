@@ -155,7 +155,6 @@ function PostPropertyForm({ navigation, userId }) {
         latitude,
         longitude,
         images: imageUrls,
-        status: 'active',
       });
       setSuccess(true);
       reset();
@@ -183,7 +182,7 @@ function PostPropertyForm({ navigation, userId }) {
         <Text style={{ fontSize: 20, fontWeight: '800', color: colors.espresso900, marginBottom: 16 }}>Post a Property</Text>
 
         <ErrorText>{error}</ErrorText>
-        {success ? <Text style={{ color: colors.success, marginBottom: 12, fontWeight: '600' }}>Property posted!</Text> : null}
+        {success ? <Text style={{ color: colors.success, marginBottom: 12, fontWeight: '600' }}>Submitted! Your property is awaiting admin approval.</Text> : null}
 
         <Field label="Title" value={title} onChangeText={setTitle} placeholder="3 BHK apartment in Anna Nagar" />
         <Field label="Description" value={description} onChangeText={setDescription} multiline numberOfLines={4} style={{ minHeight: 90, textAlignVertical: 'top' }} />

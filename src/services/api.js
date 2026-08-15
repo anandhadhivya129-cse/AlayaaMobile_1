@@ -402,7 +402,7 @@ export async function createProperty(payload) {
     bathrooms: Number(payload.bathrooms || 0),
     area: Number(payload.area || 0),
     property_type: payload.property_type,
-    status: payload.status || 'active',
+    status: 'pending',
     images: asArray(payload.images),
     latitude: payload.latitude != null ? Number(payload.latitude) : null,
     longitude: payload.longitude != null ? Number(payload.longitude) : null,
@@ -412,7 +412,20 @@ export async function createProperty(payload) {
   if (error) throw error;
   return normalizeProperty(data);
 }
-
+// Minimal, safe status-only update — used by the admin approve/reject
+// screen. Deliberately does NOT reuse updateProperty(), which rebuilds
+// the entire row from a payload and would zero out price/bedrooms/etc.
+// if only { status } is passed in.
+export async function updatePropertyStatus(id, status) {
+  const { data, error } = await supabase
+    .from('properties')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return normalizeProperty(data);
+}
 export async function updateProperty(id, payload) {
   const row = {
     title: payload.title,
