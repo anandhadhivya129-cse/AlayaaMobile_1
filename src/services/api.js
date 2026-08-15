@@ -1,5 +1,7 @@
 import * as Linking from 'expo-linking';
 import { supabase } from './supabaseClient';
+import * as FileSystem from 'expo-file-system';
+import { decode } from 'base64-arraybuffer';
 
 const AVATAR_BUCKET = 'profile-pictures';
 const PROPERTY_BUCKET = 'property-images';
@@ -315,20 +317,21 @@ export async function updateProfile(userId, updates) {
 // --- Image uploads -------------------------------------------------------
 // `asset` is an object from expo-image-picker: { uri, fileName?, mimeType? }
 async function assetToUploadable(asset) {
-  const response = await fetch(asset.uri);
-  const blob = await response.blob();
+  const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
   const extension = (asset.fileName || asset.uri).split('.').pop()?.split('?')[0] || 'jpg';
-  const contentType = asset.mimeType || blob.type || 'image/jpeg';
-  return { blob, extension, contentType };
+  const contentType = asset.mimeType || `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+  return { arrayBuffer: decode(base64), extension, contentType };
 }
 
 export async function uploadProfilePicture(asset, userId) {
-  const { blob, extension, contentType } = await assetToUploadable(asset);
+  const { arrayBuffer, extension, contentType } = await assetToUploadable(asset);
   const filePath = `${userId}/${Date.now()}.${extension}`;
 
   const { error } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .upload(filePath, blob, { upsert: true, cacheControl: '3600', contentType });
+    .upload(filePath, arrayBuffer, { upsert: true, cacheControl: '3600', contentType });
   if (error) throw error;
 
   const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(filePath);
@@ -338,11 +341,11 @@ export async function uploadProfilePicture(asset, userId) {
 export async function uploadPropertyImages(assets, brokerId) {
   const uploads = await Promise.all(
     assets.map(async (asset, index) => {
-      const { blob, extension, contentType } = await assetToUploadable(asset);
+      const { arrayBuffer, extension, contentType } = await assetToUploadable(asset);
       const filePath = `${brokerId}/${Date.now()}_${index}.${extension}`;
       const { error } = await supabase.storage
         .from(PROPERTY_BUCKET)
-        .upload(filePath, blob, { upsert: true, cacheControl: '3600', contentType });
+        .upload(filePath, arrayBuffer, { upsert: true, cacheControl: '3600', contentType });
       if (error) throw error;
       const { data } = supabase.storage.from(PROPERTY_BUCKET).getPublicUrl(filePath);
       return data.publicUrl;
