@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Heart, MessageSquare, User, PlusCircle } from 'lucide-react-native';
+import { Home, Heart, MessageSquare, User, PlusCircle, Building2 } from 'lucide-react-native';
 import colors from '../theme/colors';
 
 import CustomerBrowseScreen from '../screens/customer/CustomerBrowseScreen';
@@ -8,7 +8,7 @@ import BrokerPostPropertyScreen from '../screens/broker/BrokerPostPropertyScreen
 import CustomerFavoritesScreen from '../screens/customer/CustomerFavoritesScreen';
 import CustomerEnquiriesScreen from '../screens/customer/CustomerEnquiriesScreen';
 import CustomerProfileScreen from '../screens/customer/CustomerProfileScreen';
-
+import CustomerMyPropertiesScreen from '../screens/customer/CustomerMyPropertiesScreen';
 const Tab = createBottomTabNavigator();
 
 export default function CustomerTabs() {
@@ -30,6 +30,11 @@ export default function CustomerTabs() {
         name="PostProperty"
         component={BrokerPostPropertyScreen}
         options={{ title: 'Post', tabBarIcon: ({ color, size }) => <PlusCircle color={color} size={size} /> }}
+      />
+      <Tab.Screen
+        name="MyProperties"
+        component={CustomerMyPropertiesScreen}
+        options={{ title: 'My Posts', tabBarIcon: ({ color, size }) => <Building2 color={color} size={size} /> }}
       />
       <Tab.Screen
         name="Saved"
