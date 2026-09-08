@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, ActivityIndicator, StyleSheet, FlatList, Dimensions } from 'react-native';
-import { MapPin, BedDouble, Bath, Ruler, BadgeCheck } from 'lucide-react-native';
+import { MapPin, BedDouble, Bath, Ruler, BadgeCheck, Home } from 'lucide-react-native';
 import { Screen } from '../components/ui';
 import LeafletMap from '../components/LeafletMap';
 import EMICalculator from '../components/EMICalculator';
 import ContactCard from '../components/ContactCard';
-import { fetchPropertyById, createEnquiry, fetchProfileById } from '../services/api';
+import { fetchPropertyById, createEnquiry, fetchProfile } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
 
@@ -24,7 +24,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
         const data = await fetchPropertyById(propertyId);
         setProperty(data);
         if (data?.broker_id) {
-          const brokerProfile = await fetchProfileById(data.broker_id).catch(() => null);
+          const brokerProfile = await fetchProfile(data.broker_id).catch(() => null);
           setBroker(brokerProfile);
         }
       } catch (err) {
@@ -82,7 +82,10 @@ export default function PropertyDetailScreen({ route, navigation }) {
             renderItem={({ item }) => <Image source={{ uri: item }} style={{ width, height: 240 }} />}
           />
         ) : (
-          <View style={{ width, height: 240, backgroundColor: colors.espresso100 }} />
+          <View style={{ width, height: 240, backgroundColor: colors.espresso100, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Home size={36} color={colors.border} strokeWidth={1.5} />
+            <Text style={{ color: colors.textMuted, fontSize: 13, fontWeight: '600' }}>No photos added yet</Text>
+          </View>
         )}
 
         <View style={{ padding: 16 }}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { MapPin, BedDouble, Bath, Ruler, BadgeCheck, Heart } from 'lucide-react-native';
+import { MapPin, BedDouble, Bath, Ruler, BadgeCheck, Heart, Home } from 'lucide-react-native';
 import colors from '../theme/colors';
 
 export default function PropertyCard({ property, onPress, onToggleFavorite, isFavorite }) {
@@ -11,7 +11,8 @@ export default function PropertyCard({ property, onPress, onToggleFavorite, isFa
           <Image source={{ uri: property.image }} style={styles.image} />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder]}>
-            <Text style={{ color: colors.textMuted }}>No image</Text>
+            <Home size={28} color={colors.border} strokeWidth={1.5} />
+            <Text style={styles.imagePlaceholderText}>Photo coming soon</Text>
           </View>
         )}
         {onToggleFavorite ? (
@@ -72,7 +73,8 @@ const styles = StyleSheet.create({
   },
   imageWrap: { width: '100%', height: 160, backgroundColor: colors.espresso100 },
   image: { width: '100%', height: '100%' },
-  imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  imagePlaceholder: { alignItems: 'center', justifyContent: 'center', gap: 6 },
+  imagePlaceholderText: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   favBtn: {
     position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(62,39,35,0.55)',
     borderRadius: 20, padding: 7,

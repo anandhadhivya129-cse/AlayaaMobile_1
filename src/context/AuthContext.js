@@ -11,6 +11,7 @@ import {
   uploadProfilePicture as apiUploadProfilePicture,
 } from '../services/api';
 import { supabase } from '../services/supabaseClient';
+import { navigate } from '../navigation/navigationRef';
 
 const AuthContext = createContext(null);
 
@@ -33,10 +34,12 @@ function applyUserProfile(authUser, profile) {
   };
 }
 
-// Pulls access_token / refresh_token out of a Supabase deep-link redirect,
-// e.g. alayaa://login#access_token=...&refresh_token=...
+// Pulls the auth payload out of a Supabase deep-link redirect,
+// e.g. alayaa://login#access_token=...&refresh_token=...  (implicit flow)
+// or   alayaa://reset-password?code=...                    (PKCE flow)
 // Handles both a leading "#" fragment and a leading "?" query, since
-// different Supabase flows (confirm signup vs magic link) can format it either way.
+// different Supabase flows (confirm signup, magic link, password recovery)
+// can format it either way. Returns a shape the caller can act on directly.
 function parseTokensFromUrl(url) {
   if (!url) return null;
   const fragment = url.split('#')[1];
@@ -45,11 +48,23 @@ function parseTokensFromUrl(url) {
   if (!paramsString) return null;
 
   const params = new URLSearchParams(paramsString);
+  // Supabase tags password-recovery links with type=recovery regardless of
+  // whether it's the implicit (tokens) or PKCE (code) flow — used below to
+  // force navigation to the reset screen instead of wherever the app
+  // already happened to be.
+  const isRecovery = params.get('type') === 'recovery';
+
   const access_token = params.get('access_token');
   const refresh_token = params.get('refresh_token');
   if (access_token && refresh_token) {
-    return { access_token, refresh_token };
+    return { type: 'tokens', access_token, refresh_token, isRecovery };
   }
+
+  const code = params.get('code');
+  if (code) {
+    return { type: 'code', code, isRecovery };
+  }
+
   return null;
 }
 
@@ -130,12 +145,25 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const handleDeepLink = async (event) => {
       const url = typeof event === 'string' ? event : event?.url;
-      const tokens = parseTokensFromUrl(url);
-      if (!tokens) return;
+      const payload = parseTokensFromUrl(url);
+      if (!payload) return;
 
       try {
-        const { error } = await supabase.auth.setSession(tokens);
-        if (error) throw error;
+        if (payload.type === 'tokens') {
+          const { error } = await supabase.auth.setSession(payload);
+          if (error) throw error;
+        } else if (payload.type === 'code') {
+          const { error } = await supabase.auth.exchangeCodeForSession(payload.code);
+          if (error) throw error;
+        }
+
+        // Password-recovery links log the user in as a side effect (required
+        // so updateUser({ password }) has a session to act on) — but that
+        // must never leave them sitting on their normal dashboard instead of
+        // the "set a new password" screen. Force it explicitly.
+        if (payload.isRecovery) {
+          navigate('ResetPassword');
+        }
       } catch (error) {
         console.error('Failed to set session from deep link', error);
       }

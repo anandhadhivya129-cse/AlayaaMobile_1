@@ -191,8 +191,11 @@ async function attachProfiles(rows, profileKey) {
 
 // In RN there's no window.location.origin — we use the app's own deep-link scheme
 // (see app.json "scheme": "alayaa") so Supabase can redirect back into the app.
+// NOTE: no leading slash on the path — Linking.createURL('/x') can produce an
+// extra slash (alayaa:///x) that won't exactly match what's allow-listed in
+// Supabase's Authentication > URL Configuration > Redirect URLs.
 function authRedirectPath(path = '') {
-  return Linking.createURL(path);
+  return Linking.createURL(path.replace(/^\/+/, ''));
 }
 
 // Turns raw Supabase/Postgres error messages (RLS violations, network

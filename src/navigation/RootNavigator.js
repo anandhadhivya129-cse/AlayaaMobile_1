@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
 
+import { navigationRef, flushPendingNavigation } from './navigationRef';
+
 import HomeScreen from '../screens/HomeScreen';
 import PropertyDetailScreen from '../screens/PropertyDetailScreen';
 import BrokerPostPropertyScreen from '../screens/broker/BrokerPostPropertyScreen';
@@ -34,7 +36,7 @@ const linking = {
 
 export default function RootNavigator() {
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer ref={navigationRef} linking={linking} onReady={flushPendingNavigation}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} options={{ headerShown: true, title: 'Property' }} />
