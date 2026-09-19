@@ -42,7 +42,7 @@ export default function HomeScreen({ navigation }) {
     else setSearching(true);
 
     try {
-      const data = await fetchProperties({ query: debouncedQuery, status: 'active' });
+     const data = await fetchProperties({ query: debouncedQuery, status: 'active' });
       // Ignore this result if a newer search has since been kicked off.
       if (requestId !== requestIdRef.current) return;
       setProperties(data);

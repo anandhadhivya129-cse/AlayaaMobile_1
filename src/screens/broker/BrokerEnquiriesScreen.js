@@ -1,12 +1,38 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, RefreshControl, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, TextInput } from 'react-native';
 import { Send } from 'lucide-react-native';
 import { Screen, Card, EmptyState } from '../../components/ui';
-import { fetchBrokerEnquiries, replyToEnquiry } from '../../services/api';
+import { fetchCustomerEnquiries, fetchBrokerEnquiries, replyToEnquiry } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import colors from '../../theme/colors';
 
-function EnquiryRow({ item, onReplied }) {
+const STATUS_COLORS = { new: colors.warning, replied: colors.success };
+
+function SentEnquiryCard({ item, navigation }) {
+  return (
+    <TouchableOpacity onPress={() => item.property_id && navigation?.navigate('PropertyDetail', { propertyId: item.property_id })}>
+      <Card style={{ marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={{ fontWeight: '700', color: colors.espresso900, flex: 1 }} numberOfLines={1}>
+            {item.property?.title || 'Property'}
+          </Text>
+          <Text style={{ color: STATUS_COLORS[item.status] || colors.textMuted, fontWeight: '700', fontSize: 11, textTransform: 'uppercase' }}>
+            {item.status}
+          </Text>
+        </View>
+        <Text style={{ color: colors.espresso600, marginTop: 6, fontSize: 13 }}>You: {item.message}</Text>
+        {item.reply_message ? (
+          <View style={{ marginTop: 8, backgroundColor: colors.espresso50, borderRadius: 10, padding: 10 }}>
+            <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 2 }}>Reply</Text>
+            <Text style={{ fontSize: 13, color: colors.espresso900 }}>{item.reply_message}</Text>
+          </View>
+        ) : null}
+      </Card>
+    </TouchableOpacity>
+  );
+}
+
+function ReceivedEnquiryCard({ item, onReplied }) {
   const [reply, setReply] = useState(item.reply_message || '');
   const [sending, setSending] = useState(false);
 
@@ -50,17 +76,23 @@ function EnquiryRow({ item, onReplied }) {
   );
 }
 
-export default function BrokerEnquiriesScreen() {
+export default function BrokerEnquiriesScreen({ navigation }) {
   const { user } = useAuth();
-  const [enquiries, setEnquiries] = useState([]);
+  const [tab, setTab] = useState('received');
+  const [sent, setSent] = useState([]);
+  const [received, setReceived] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const data = await fetchBrokerEnquiries(user.id);
-      setEnquiries(data);
+      const [sentData, receivedData] = await Promise.all([
+        fetchCustomerEnquiries(user.id), // enquiries this user sent on other properties
+        fetchBrokerEnquiries(user.id), // enquiries received on this broker's properties
+      ]);
+      setSent(sentData);
+      setReceived(receivedData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -74,13 +106,32 @@ export default function BrokerEnquiriesScreen() {
   }, [load]);
 
   const markReplied = (id, message) => {
-    setEnquiries((prev) => prev.map((e) => (e.id === id ? { ...e, status: 'replied', reply_message: message } : e)));
+    setReceived((prev) => prev.map((e) => (e.id === id ? { ...e, status: 'replied', reply_message: message } : e)));
   };
+
+  const data = tab === 'sent' ? sent : received;
 
   return (
     <Screen>
       <View style={{ padding: 16, paddingBottom: 4 }}>
         <Text style={{ fontSize: 20, fontWeight: '800', color: colors.espresso900 }}>Enquiries</Text>
+      </View>
+
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 }}>
+        <TouchableOpacity
+          onPress={() => setTab('sent')}
+          style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: tab === 'sent' ? colors.espresso700 : colors.espresso50 }}
+        >
+          <Text style={{ color: tab === 'sent' ? colors.white : colors.espresso600, fontWeight: '700', fontSize: 12 }}>Sent</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setTab('received')}
+          style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: tab === 'received' ? colors.espresso700 : colors.espresso50 }}
+        >
+          <Text style={{ color: tab === 'received' ? colors.white : colors.espresso600, fontWeight: '700', fontSize: 12 }}>
+            Received{received.length ? ` (${received.length})` : ''}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -89,12 +140,27 @@ export default function BrokerEnquiriesScreen() {
         </View>
       ) : (
         <FlatList
-          data={enquiries}
+          data={data}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16, paddingTop: 8 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
-          ListEmptyComponent={<EmptyState title="No enquiries yet" />}
-          renderItem={({ item }) => <EnquiryRow item={item} onReplied={markReplied} />}
+          ListEmptyComponent={
+            <EmptyState
+              title={tab === 'sent' ? 'No enquiries yet' : 'No enquiries received'}
+              subtitle={
+                tab === 'sent'
+                  ? 'Enquire on a property to start a conversation with the owner.'
+                  : "You'll see messages here when someone asks about a property you posted."
+              }
+            />
+          }
+          renderItem={({ item }) =>
+            tab === 'sent' ? (
+              <SentEnquiryCard item={item} navigation={navigation} />
+            ) : (
+              <ReceivedEnquiryCard item={item} onReplied={markReplied} />
+            )
+          }
         />
       )}
     </Screen>

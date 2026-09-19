@@ -360,7 +360,7 @@ export async function uploadPropertyImages(assets, brokerId) {
 // --- Properties ------------------------------------------------------------
 export async function fetchProperties(filters = {}) {
   const options = typeof filters === 'string' ? { query: filters } : filters;
-  const { query = '', city = '', propertyType = '', status = 'active', minPrice, maxPrice, bedrooms, limit } = options;
+  const { query = '', city = '', propertyType = '', status = 'approved', minPrice, maxPrice, bedrooms, limit } = options;
 
   let request = supabase.from('properties').select('*').order('id', { ascending: false });
   if (status) request = request.eq('status', status);
@@ -444,7 +444,7 @@ export async function updateProperty(id, payload) {
     bathrooms: Number(payload.bathrooms || 0),
     area: Number(payload.area || 0),
     property_type: payload.property_type,
-    status: payload.status || 'active',
+    status: payload.status || 'pending',
     images: asArray(payload.images),
     latitude: payload.latitude != null ? Number(payload.latitude) : null,
     longitude: payload.longitude != null ? Number(payload.longitude) : null,
